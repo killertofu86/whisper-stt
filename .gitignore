@@ -1,0 +1,12 @@
+# Virtual environment
+venv/
+__pycache__/
+*.pyc
+
+# Audio files
+*.wav
+*.mp3
+*.oga
+
+# Test files
+test_*.py
