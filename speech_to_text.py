@@ -5,6 +5,7 @@ from evdev import InputDevice, categorize, ecodes
 import os
 import subprocess
 import configparser
+from scipy import signal
 
 # Read configuration
 config = configparser.ConfigParser()
@@ -46,13 +47,21 @@ def audio_callback(indata, frames, time, status):
         print(status)
     audio_data.append(indata.copy())
 
+def find_audio_device(name_pattern):
+    devices = sd.query_devices()
+    for i, device in enumerate(devices):
+        if name_pattern.lower() in device['name'].lower() and device['max_input_channels'] > 0:
+            return i
+    return None  # Not found, will use default
+
+
 # Main loop
 stream = None
 for event in device.read_loop():
     if event.type == ecodes.EV_KEY and event.code == BUTTON_CODE:
         if event.value == 1:  # Button pressed            
             audio_data = []
-            stream = sd.InputStream(samplerate=SAMPLE_RATE, channels=CHANNELS, callback=audio_callback, device=AUDIO_DEVICE)
+            stream = sd.InputStream(samplerate=SAMPLE_RATE, channels=CHANNELS, callback=audio_callback, device=find_audio_device(AUDIO_DEVICE))
             stream.start()
             open(STATUS_FILE, 'w').close()
             recording = True
@@ -60,17 +69,23 @@ for event in device.read_loop():
         elif event.value == 0 and recording:  # Button released            
             stream.stop()
             stream.close()
-            os.remove(STATUS_FILE)
+            if os.path.exists(STATUS_FILE):
+                os.remove(STATUS_FILE)
             recording = False
             
             # Convert audio data to format Whisper expects
             audio_array = np.concatenate(audio_data, axis=0).flatten()
-            
+            #print(f"Audio array length: {len(audio_array)}, duration: {len(audio_array)/SAMPLE_RATE:.2f}s") debug  only
+            #print(f"Audio min: {audio_array.min()}, max: {audio_array.max()}") debug  only
+
+
             # Transcribe with language setting
             language_param = None if LANGUAGE == 'auto' else LANGUAGE
+            # Resample from 48kHz to 16kHz for Whisper 
+            audio_array = signal.resample(audio_array, int(len(audio_array) * 16000 / SAMPLE_RATE))
             result = model.transcribe(audio_array, language=language_param, fp16=False)
             subprocess.run(['paplay', BEEP_SOUND])
             text = result['text']            
-            print(f"Text to copy: '{text}'")
+            #print(f"Text to copy: '{text}'") debug  only
             subprocess.run(['wl-copy'], input=text, text=True)
             subprocess.run(['wtype', '-M', 'ctrl', 'v', '-m', 'ctrl'])
