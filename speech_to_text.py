@@ -24,6 +24,10 @@ MOUSE_DEVICE = config.get('Input', 'mouse_device', fallback='/dev/input/event2')
 BUTTON_CODE = config.getint('Input', 'button_code', fallback=275)
 ROCM_EXPERIMENTAL = config.getboolean('System', 'rocm_experimental', fallback=True)
 STATUS_FILE = config.get('System', 'status_file', fallback='/tmp/whisper-recording')
+MIN_DURATION = config.getfloat('Audio', 'min_duration', fallback=0.3)
+MIN_AMPLITUDE = config.getfloat('Audio', 'min_amplitude', fallback=0.01)
+
+
 
 # Setup environment
 if ROCM_EXPERIMENTAL:
@@ -77,8 +81,10 @@ for event in device.read_loop():
             audio_array = np.concatenate(audio_data, axis=0).flatten()
             #print(f"Audio array length: {len(audio_array)}, duration: {len(audio_array)/SAMPLE_RATE:.2f}s") debug  only
             #print(f"Audio min: {audio_array.min()}, max: {audio_array.max()}") debug  only
-
-
+            if len(audio_array)/SAMPLE_RATE < MIN_DURATION:
+                continue 
+            if abs(audio_array).max() < MIN_AMPLITUDE:
+                continue 
             # Transcribe with language setting
             language_param = None if LANGUAGE == 'auto' else LANGUAGE
             # Resample from 48kHz to 16kHz for Whisper 
