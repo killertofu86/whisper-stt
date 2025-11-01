@@ -11,6 +11,7 @@ MOUSE_DEVICE = '/dev/input/event2'
 BUTTON_CODE = 275  # BTN_SIDE
 SAMPLE_RATE = 16000  # Whisper prefers 16kHz
 CHANNELS = 1
+STATUS_FILE= '/tmp/whisper-recording'
 
 # Load Whisper model once
 print("Loading Whisper model...")
@@ -35,16 +36,18 @@ stream = None
 for event in device.read_loop():
     if event.type == ecodes.EV_KEY and event.code == BUTTON_CODE:
         if event.value == 1:  # Button pressed            
-            print("Recording...")
+            #print("Recording...") not needed for service
             audio_data = []
             stream = sd.InputStream(samplerate=SAMPLE_RATE, channels=CHANNELS, callback=audio_callback)
             stream.start()
+            open(STATUS_FILE, 'w').close()
             recording = True
             
         elif event.value == 0 and recording:  # Button released            
-            print("Processing...")
+            #print("Processing...") not needed for service
             stream.stop()
             stream.close()
+            os.remove(STATUS_FILE)
             recording = False
             
             # Convert audio data to format Whisper expects
