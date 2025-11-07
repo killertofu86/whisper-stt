@@ -1,4 +1,3 @@
-```markdown
 # Whisper Speech-to-Text for Linux (Wayland)
 
 A system-wide push-to-talk speech-to-text solution for Linux using OpenAI's Whisper model with GPU acceleration.
