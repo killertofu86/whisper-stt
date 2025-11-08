@@ -12,6 +12,7 @@ A system-wide push-to-talk speech-to-text solution for Linux using OpenAI's Whis
 - 🔄 Automatic audio device detection
 - 📋 Clipboard workflow with auto-paste
 - 🎯 Silence detection to skip empty recordings
+```
 
 ## Requirements
 
