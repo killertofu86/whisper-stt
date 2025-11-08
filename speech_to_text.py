@@ -91,7 +91,7 @@ for event in device.read_loop():
             audio_array = signal.resample(audio_array, int(len(audio_array) * 16000 / SAMPLE_RATE))
             result = model.transcribe(audio_array, language=language_param, fp16=False)
             subprocess.run(['paplay', '--volume=32768', BEEP_SOUND]) #ToDo make configurable
-            text = result['text']            
+            text = result['text'].strip ()        
             #print(f"Text to copy: '{text}'") debug  only
             subprocess.run(['wl-copy'], input=text, text=True)
             subprocess.run(['wtype', '-M', 'ctrl', 'v', '-m', 'ctrl'])
