@@ -1,7 +1,10 @@
 [Unit]
 Description=Speech-to-text service using Whisper (mouse button 4 push-to-talk)
 After=sound.target
+Wants=sound.target
+
 [Service]
+ExecStartPre=/bin/sleep 5
 ExecStart=/home/archduke/coding/python/venv/whisper-stt/bin/python -u /home/archduke/coding/python/whisper-stt/speech_to_text.py
 WorkingDirectory=/home/archduke/coding/python/whisper-stt
 Environment=TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1
