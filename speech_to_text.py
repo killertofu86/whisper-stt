@@ -95,7 +95,5 @@ for event in device.read_loop():
             text = result['text'].strip ()        
             #print(f"Text to copy: '{text}'") debug  only
             subprocess.run(['wl-copy'], input=text, text=True)
-            subprocess.run(['sh', '-c', f'echo "type {text}" | dotool'])
-
-
+            subprocess.run(['sh', '-c', 'echo "key ctrl+v" | dotool'])
 
