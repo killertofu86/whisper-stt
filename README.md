@@ -12,7 +12,6 @@ A system-wide push-to-talk speech-to-text solution for Linux using OpenAI's Whis
 - 🔄 Automatic audio device detection
 - 📋 Clipboard workflow with auto-paste
 - 🎯 Silence detection to skip empty recordings
-```
 
 ## Requirements
 
@@ -44,25 +43,42 @@ pip install openai-whisper sounddevice scipy evdev
 
 4. Install system dependencies:
 ```bash
-sudo pacman -S wtype wl-clipboard rofi
+sudo pacman -S wl-clipboard rofi dotool
 ```
 
-5. Create config directory and copy config file:
+5. Enable and start the dotool daemon:
+```bash
+systemctl --user enable --now dotool
+```
+If no systemd service exists, create `~/.config/systemd/user/dotool.service`:
+```ini
+[Unit]
+Description=Dotool daemon for input simulation
+
+[Service]
+ExecStart=/usr/bin/dotoold
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
+```
+
+6. Create config directory and copy config file:
 ```bash
 mkdir -p ~/.config/whisper-stt
 cp config.ini ~/.config/whisper-stt/
 ```
 
-6. Edit the config file to match your setup (audio device, mouse button, etc.)
+7. Edit the config file to match your setup (audio device, mouse button, etc.)
 
-7. Copy systemd service file:
+8. Copy systemd service file:
 ```bash
 cp systemd/whisper-stt.service ~/.config/systemd/user/
 systemctl --user daemon-reload
 systemctl --user enable --now whisper-stt
 ```
 
-8. (Optional) Install waybar scripts:
+9. (Optional) Install waybar scripts:
 ```bash
 mkdir -p ~/scripts/whisper
 cp scripts/* ~/scripts/whisper/
@@ -110,19 +126,17 @@ This code is provided as-is for anyone to use, fork, or modify. Feel free to ask
 
 **I am not actively developing features for others.** This is a personal project that I'm sharing with the community. You're welcome to fork and adapt it for your own needs.
 
+## Development
+
+This project was developed using [this Solveit notebook](https://share.solve.it.com/d/e1120924ec9fcd902adfdeeda97bdd16), which contains the full development process and discussions.
+
 ## Credits
 
 Built with:
 - [OpenAI Whisper](https://github.com/openai/whisper)
 - AMD ROCm
 - Various open-source Linux tools
-- Solve It (s)
+
 ---
 
-## Development
-
-This project was developed using [this Solveit notebook](https://share.solve.it.com/d/e1120924ec9fcd902adfdeeda97bdd16), which contains the full development process and discussions.
-
-
 *If you find this useful, feel free to star the repo or share it with others!*
-```
