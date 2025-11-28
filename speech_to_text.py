@@ -6,6 +6,7 @@ import os
 import subprocess
 import configparser
 from scipy import signal
+import time
 
 # Read configuration
 config = configparser.ConfigParser()
@@ -58,7 +59,7 @@ def find_audio_device(name_pattern):
             return i
     return None  # Not found, will use default
 
-
+subprocess.run(['paplay', '--volume=32768', BEEP_SOUND]) 
 # Main loop
 stream = None
 for event in device.read_loop():
@@ -90,8 +91,11 @@ for event in device.read_loop():
             # Resample from 48kHz to 16kHz for Whisper 
             audio_array = signal.resample(audio_array, int(len(audio_array) * 16000 / SAMPLE_RATE))
             result = model.transcribe(audio_array, language=language_param, fp16=False)
-            subprocess.run(['paplay', '--volume=32768', BEEP_SOUND]) #ToDo make configurable
+            subprocess.run(['paplay', '--volume=32768', BEEP_SOUND]) 
             text = result['text'].strip ()        
             #print(f"Text to copy: '{text}'") debug  only
             subprocess.run(['wl-copy'], input=text, text=True)
-            subprocess.run(['wtype', '-M', 'ctrl', 'v', '-m', 'ctrl'])
+            subprocess.run(['sh', '-c', f'echo "type {text}" | dotool'])
+
+
+
