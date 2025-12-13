@@ -12,6 +12,13 @@ A system-wide push-to-talk speech-to-text solution for Linux using OpenAI's Whis
 - 🔄 Automatic audio device detection
 - 📋 Clipboard workflow with auto-paste
 - 🎯 Silence detection to skip empty recordings
+- 🖥️ Works on both Wayland and X11 (auto-detects)
+
+
+### Display Server Support
+- Wayland: uses wl-copy + dotool
+- X11: uses xclip + xdotool
+- Auto-detects via XDG_SESSION_TYPE environment variable
 
 ## Requirements
 
@@ -43,7 +50,10 @@ pip install openai-whisper sounddevice scipy evdev
 
 4. Install system dependencies:
 ```bash
+wayland:
 sudo pacman -S wl-clipboard rofi dotool
+x11:
+sudo pacman -S wl-clipboard  xclip xdotool
 ```
 
 5. Enable and start the dotool daemon:

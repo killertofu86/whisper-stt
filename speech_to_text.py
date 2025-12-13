@@ -28,7 +28,8 @@ STATUS_FILE = config.get('System', 'status_file', fallback='/tmp/whisper-recordi
 MIN_DURATION = config.getfloat('Audio', 'min_duration', fallback=0.3)
 MIN_AMPLITUDE = config.getfloat('Audio', 'min_amplitude', fallback=0.01)
 
-
+# Detect display server
+SESSION_TYPE = os.environ.get('XDG_SESSION_TYPE', 'wayland')
 
 # Setup environment
 if ROCM_EXPERIMENTAL:
@@ -78,7 +79,7 @@ for event in device.read_loop():
                 os.remove(STATUS_FILE)
             recording = False
             
-            # Convert audio data to format Whisper expects
+            # Convert audio data to format Whisper expsects
             audio_array = np.concatenate(audio_data, axis=0).flatten()
             #print(f"Audio array length: {len(audio_array)}, duration: {len(audio_array)/SAMPLE_RATE:.2f}s") debug  only
             #print(f"Audio min: {audio_array.min()}, max: {audio_array.max()}") debug  only
@@ -94,6 +95,11 @@ for event in device.read_loop():
             subprocess.run(['paplay', '--volume=32768', BEEP_SOUND]) 
             text = result['text'].strip ()        
             #print(f"Text to copy: '{text}'") debug  only
-            subprocess.run(['wl-copy'], input=text, text=True)
-            subprocess.run(['sh', '-c', 'echo "key ctrl+v" | dotool'])
+            #print(f"Session type: {SESSION_TYPE}") debug  only
+            if SESSION_TYPE == 'x11':
+                subprocess.run(['xclip', '-selection', 'clipboard'], input=text, text=True)
+                subprocess.run(['xdotool', 'key', 'ctrl+v'])
+            else:
+                subprocess.run(['wl-copy'], input=text, text=True)
+                subprocess.run(['sh', '-c', 'echo "key ctrl+v" | dotool'])
 
