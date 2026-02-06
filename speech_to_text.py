@@ -1,7 +1,7 @@
 import sounddevice as sd
 import whisper
 import numpy as np
-from evdev import InputDevice, categorize, ecodes
+from evdev import InputDevice, categorize, ecodes, UInput
 import os
 import subprocess
 import configparser
@@ -27,6 +27,7 @@ ROCM_EXPERIMENTAL = config.getboolean('System', 'rocm_experimental', fallback=Tr
 STATUS_FILE = config.get('System', 'status_file', fallback='/tmp/whisper-recording')
 MIN_DURATION = config.getfloat('Audio', 'min_duration', fallback=0.3)
 MIN_AMPLITUDE = config.getfloat('Audio', 'min_amplitude', fallback=0.01)
+GRAB_DEVICE = config.getboolean('Input', 'grab_device', fallback=True)
 
 # Detect display server
 SESSION_TYPE = os.environ.get('XDG_SESSION_TYPE', 'wayland')
@@ -42,6 +43,10 @@ print(f"Ready! Model: {MODEL_SIZE}, Language: {LANGUAGE}")
 
 # Setup mouse device
 device = InputDevice(MOUSE_DEVICE)
+if GRAB_DEVICE:
+    ui = UInput.from_device(device)
+    device.grab()
+
 
 # Recording state
 recording = False
@@ -102,4 +107,7 @@ for event in device.read_loop():
             else:
                 subprocess.run(['wl-copy'], input=text, text=True)
                 subprocess.run(['sh', '-c', 'echo "key ctrl+v" | dotool'])
+    else:
+        ui.write_event(event)
+        ui.syn()
 
