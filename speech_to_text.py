@@ -6,7 +6,7 @@ import os
 import subprocess
 import configparser
 from scipy import signal
-import time
+import threading
 
 # Read configuration
 config = configparser.ConfigParser()
@@ -65,6 +65,20 @@ def find_audio_device(name_pattern):
             return i
     return None  # Not found, will use default
 
+def transcribe(audio_array, language_param):
+        audio_array = signal.resample(audio_array, int(len(audio_array) * 16000 / SAMPLE_RATE))
+        result = model.transcribe(audio_array, language=language_param, fp16=False)
+        subprocess.run(['paplay', '--volume=32768', BEEP_SOUND]) 
+        text = result['text'].strip ()        
+        #print(f"Text to copy: '{text}'") debug  only
+        #print(f"Session type: {SESSION_TYPE}") debug  only
+        if SESSION_TYPE == 'x11':
+            subprocess.run(['xclip', '-selection', 'clipboard'], input=text, text=True)
+            subprocess.run(['xdotool', 'key', 'ctrl+v'])
+        else:
+            subprocess.run(['wl-copy'], input=text, text=True)
+            subprocess.run(['sh', '-c', 'echo "key ctrl+v" | dotool'])
+
 subprocess.run(['paplay', '--volume=32768', BEEP_SOUND]) 
 # Main loop
 stream = None
@@ -83,30 +97,9 @@ for event in device.read_loop():
             if os.path.exists(STATUS_FILE):
                 os.remove(STATUS_FILE)
             recording = False
-            
-            # Convert audio data to format Whisper expsects
             audio_array = np.concatenate(audio_data, axis=0).flatten()
-            #print(f"Audio array length: {len(audio_array)}, duration: {len(audio_array)/SAMPLE_RATE:.2f}s") debug  only
-            #print(f"Audio min: {audio_array.min()}, max: {audio_array.max()}") debug  only
-            if len(audio_array)/SAMPLE_RATE < MIN_DURATION:
-                continue 
-            if abs(audio_array).max() < MIN_AMPLITUDE:
-                continue 
-            # Transcribe with language setting
-            language_param = None if LANGUAGE == 'auto' else LANGUAGE
-            # Resample from 48kHz to 16kHz for Whisper 
-            audio_array = signal.resample(audio_array, int(len(audio_array) * 16000 / SAMPLE_RATE))
-            result = model.transcribe(audio_array, language=language_param, fp16=False)
-            subprocess.run(['paplay', '--volume=32768', BEEP_SOUND]) 
-            text = result['text'].strip ()        
-            #print(f"Text to copy: '{text}'") debug  only
-            #print(f"Session type: {SESSION_TYPE}") debug  only
-            if SESSION_TYPE == 'x11':
-                subprocess.run(['xclip', '-selection', 'clipboard'], input=text, text=True)
-                subprocess.run(['xdotool', 'key', 'ctrl+v'])
-            else:
-                subprocess.run(['wl-copy'], input=text, text=True)
-                subprocess.run(['sh', '-c', 'echo "key ctrl+v" | dotool'])
+            threading.Thread(target=transcribe, args=(audio_array,LANGUAGE)).start()    
+                   
     else:
         ui.write_event(event)
         ui.syn()
