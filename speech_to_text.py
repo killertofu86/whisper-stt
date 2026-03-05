@@ -15,7 +15,7 @@ config.read(config_path)
 
 # Load settings with individual fallbacks
 MODEL_SIZE = config.get('Model', 'size', fallback='large')
-LANGUAGE = config.get('Model', 'language', fallback='auto')
+LANGUAGE = config.get('Model', 'language', fallback='auto'); LANGUAGE = None if LANGUAGE == 'auto' else LANGUAGE
 MODEL_PATH = config.get('Model', 'model_path', fallback=os.path.expanduser('~/ai/models/whisper'))
 SAMPLE_RATE = config.getint('Audio', 'sample_rate', fallback=16000)
 CHANNELS = config.getint('Audio', 'channels', fallback=1)
