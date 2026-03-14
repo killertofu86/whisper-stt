@@ -1,10 +1,10 @@
 # Whisper Speech-to-Text for Linux (Wayland)
 
-A system-wide push-to-talk speech-to-text solution for Linux using OpenAI's Whisper model with GPU acceleration.
+A system-wide speech-to-text solution for Linux using OpenAI's Whisper model with GPU acceleration.
 
 ## Features
 
-- 🎤 Push-to-talk with configurable mouse button
+- 🎤 **Push-to-talk** or **VAD mode** (voice activity detection - auto-stop on silence)
 - 🚀 GPU-accelerated transcription (~0.95s latency with AMD ROCm)
 - 🌍 Multi-language support (auto-detect, English, German, Japanese)
 - 📊 Waybar integration with visual indicators
@@ -14,6 +14,21 @@ A system-wide push-to-talk speech-to-text solution for Linux using OpenAI's Whis
 - 🎯 Silence detection to skip empty recordings
 - 🖥️ Works on both Wayland and X11 (auto-detects)
 
+## Modes
+
+### Push-to-talk (default)
+Hold button → speak → release → transcription starts.
+
+### VAD mode (Voice Activity Detection)
+Press button once → speak → auto-stops after configurable silence duration (default: 1.5s).
+Great for longer dictation - no need to hold the button.
+
+Set in config:
+```ini
+[Input]
+mode = vad                  # or push_to_talk
+vad_silence_duration = 1.5  # seconds of silence before auto-stop
+```
 
 ### Display Server Support
 - Wayland: uses wl-copy + dotool
@@ -50,10 +65,10 @@ pip install openai-whisper sounddevice scipy evdev
 
 4. Install system dependencies:
 ```bash
-wayland:
+# Wayland:
 sudo pacman -S wl-clipboard rofi dotool
-x11:
-sudo pacman -S wl-clipboard  xclip xdotool
+# X11:
+sudo pacman -S xclip xdotool
 ```
 
 5. Enable and start the dotool daemon:
@@ -99,19 +114,34 @@ chmod +x ~/scripts/whisper/*.sh
 
 Edit `~/.config/whisper-stt/config.ini` to customize:
 
-- Model size (small/medium/large)
-- Language mode (auto/en/de/ja)
-- Audio device pattern
-- Mouse button code
-- Sample rate and other audio settings
-- Silence detection thresholds
+```ini
+[Model]
+size = large                  # small / medium / large / large-v3-turbo
+language = auto               # auto / en / de / ja
+
+[Audio]
+audio_device = CORSAIR        # partial name match of your mic
+sample_rate = 48000
+min_amplitude = 0.005         # VAD/silence threshold (tune to your environment)
+
+[Input]
+button_code = 275             # evdev code of your mouse button
+mode = vad                    # push_to_talk / vad
+vad_silence_duration = 1.5
+```
 
 ## Usage
 
+### Push-to-talk
 1. Press and hold your configured mouse button
 2. Speak your text
-3. Release the button
-4. Text is automatically transcribed and pasted
+3. Release → text is transcribed and pasted
+
+### VAD mode
+1. Click into a text field
+2. Press button once
+3. Speak (as long as you want)
+4. Pause for ~1.5s → auto-transcribe and paste
 
 Use waybar buttons (if configured) to:
 - Toggle service on/off
