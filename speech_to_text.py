@@ -30,6 +30,7 @@ MIN_AMPLITUDE = config.getfloat('Audio', 'min_amplitude', fallback=0.01)
 GRAB_DEVICE = config.getboolean('Input', 'grab_device', fallback=True)
 MODE = config.get('Input', 'mode', fallback='push_to_talk')
 VAD_SILENCE_DURATION = config.getfloat('Input', 'vad_silence_duration', fallback=1.5)
+VAD_INITIAL_SILENCE_DURATION = config.getfloat('Input', 'vad_initial_silence_duration', fallback=5.0)
 
 VAD_MODE = (MODE == 'vad')
 SESSION_TYPE = os.environ.get('XDG_SESSION_TYPE', 'wayland')
@@ -49,10 +50,11 @@ if GRAB_DEVICE:
 recording = False
 audio_data = []
 last_audio_time = 0.0
+speech_detected = False
 stream = None
 
 def audio_callback(indata, frames, time_info, status):
-    global last_audio_time
+    global last_audio_time, speech_detected
     if status:
         print(status)
     audio_data.append(indata.copy())
@@ -60,6 +62,7 @@ def audio_callback(indata, frames, time_info, status):
         rms = np.sqrt(np.mean(indata**2))
         if rms > MIN_AMPLITUDE:
             last_audio_time = time.time()
+            speech_detected = True
 
 def find_audio_device(name_pattern):
     devices = sd.query_devices()
@@ -79,12 +82,14 @@ def stop_and_transcribe():
     threading.Thread(target=transcribe, args=(audio_array, LANGUAGE)).start()
 
 def vad_monitor():
+    global speech_detected
     start = time.time()
     while recording:
         time.sleep(0.1)
         since_last = time.time() - last_audio_time
         since_start = time.time() - start
-        if since_start > VAD_SILENCE_DURATION and since_last >= VAD_SILENCE_DURATION:
+        timeout = VAD_SILENCE_DURATION if speech_detected else VAD_INITIAL_SILENCE_DURATION
+        if since_start > timeout and since_last >= timeout:
             stop_and_transcribe()
             return
 
@@ -108,6 +113,7 @@ for event in device.read_loop():
         if event.value == 1:
             audio_data = []
             last_audio_time = time.time()
+            speech_detected = False
             stream = sd.InputStream(samplerate=SAMPLE_RATE, channels=CHANNELS, callback=audio_callback, device=find_audio_device(AUDIO_DEVICE))
             stream.start()
             open(STATUS_FILE, 'w').close()

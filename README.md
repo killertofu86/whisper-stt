@@ -26,8 +26,9 @@ Great for longer dictation - no need to hold the button.
 Set in config:
 ```ini
 [Input]
-mode = vad                  # or push_to_talk
-vad_silence_duration = 1.5  # seconds of silence before auto-stop
+mode = vad                          # or push_to_talk
+vad_silence_duration = 1.5          # seconds of silence before auto-stop (after speech detected)
+vad_initial_silence_duration = 5.0  # seconds to wait before auto-stop if no speech detected yet
 ```
 
 ### Display Server Support
@@ -126,8 +127,9 @@ min_amplitude = 0.005         # VAD/silence threshold (tune to your environment)
 
 [Input]
 button_code = 275             # evdev code of your mouse button
-mode = vad                    # push_to_talk / vad
-vad_silence_duration = 1.5
+mode = vad                          # push_to_talk / vad
+vad_silence_duration = 1.5          # silence timeout after speech onset
+vad_initial_silence_duration = 5.0  # silence timeout before first speech (longer grace period)
 ```
 
 ## Usage
