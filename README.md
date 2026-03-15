@@ -21,6 +21,7 @@ Hold button → speak → release → transcription starts.
 
 ### VAD mode (Voice Activity Detection)
 Press button once → speak → auto-stops after configurable silence duration (default: 1.5s).
+Press button again during recording to manually stop and transcribe immediately.
 Great for longer dictation - no need to hold the button.
 
 Set in config:
@@ -143,7 +144,7 @@ vad_initial_silence_duration = 5.0  # silence timeout before first speech (longe
 1. Click into a text field
 2. Press button once
 3. Speak (as long as you want)
-4. Pause for ~1.5s → auto-transcribe and paste
+4. Either pause for ~1.5s (auto-stop) or press button again (manual stop) → transcribe and paste
 
 Use waybar buttons (if configured) to:
 - Toggle service on/off

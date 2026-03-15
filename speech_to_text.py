@@ -111,15 +111,18 @@ stream = None
 for event in device.read_loop():
     if event.type == ecodes.EV_KEY and event.code == BUTTON_CODE:
         if event.value == 1:
-            audio_data = []
-            last_audio_time = time.time()
-            speech_detected = False
-            stream = sd.InputStream(samplerate=SAMPLE_RATE, channels=CHANNELS, callback=audio_callback, device=find_audio_device(AUDIO_DEVICE))
-            stream.start()
-            open(STATUS_FILE, 'w').close()
-            recording = True
-            if VAD_MODE:
-                threading.Thread(target=vad_monitor, daemon=True).start()
+            if recording:
+                stop_and_transcribe()
+            else:
+                audio_data = []
+                last_audio_time = time.time()
+                speech_detected = False
+                stream = sd.InputStream(samplerate=SAMPLE_RATE, channels=CHANNELS, callback=audio_callback, device=find_audio_device(AUDIO_DEVICE))
+                stream.start()
+                open(STATUS_FILE, 'w').close()
+                recording = True
+                if VAD_MODE:
+                    threading.Thread(target=vad_monitor, daemon=True).start()
         elif event.value == 0 and recording:
             if not VAD_MODE:
                 stop_and_transcribe()
